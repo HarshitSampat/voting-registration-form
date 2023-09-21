@@ -1,0 +1,470 @@
+{
+    "random input 1": {
+        "actions": [
+            {
+                "action": "visitPage",
+                "url": "http://localhost:5173",
+                "waitUntil": "load"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "text",
+                "selector": "#firstName",
+                "value": "first"
+            },
+            {
+                "action": "getElement",
+                "selector": "#lastName"
+            },
+            {
+                "action": "type",
+                "selector": "#lastName",
+                "value": "first"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "date",
+                "selector": "#dateOfBirth",
+                "value": "01-01-2000"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "radio",
+                "selector": "#female",
+                "value": "Female"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "checkbox",
+                "selector": "#Chess",
+                "value": [
+                    "Chess"
+                ]
+            },
+            {
+                "action": "delay",
+                "timeInMs": 1000
+            },
+            {
+                "action": "click",
+                "selector": "#submit"
+            },
+            {
+                "action": "screenshot",
+                "fileName": "random input 1"
+            },
+            {
+                "action": "as"
+            },
+            {
+                "action": "refresh",
+                "waitUntil": "load"
+            }
+        ],
+        "shouldSucceed": true
+    },
+    "random input 2": {
+        "actions": [
+            {
+                "action": "visitPage",
+                "url": "http://localhost:5173",
+                "waitUntil": "load"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "text",
+                "selector": "#firstName",
+                "value": "second"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "text",
+                "selector": "#lastName",
+                "value": "second"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "date",
+                "selector": "#dateOfBirth",
+                "value": "02-01-2000"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "radio",
+                "selector": "#male",
+                "value": "Male"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "checkbox",
+                "selector": "#Badminton",
+                "value": [
+                    "Badminton"
+                ]
+            },
+            {
+                "action": "delay",
+                "timeInMs": 1000
+            },
+            {
+                "action": "click",
+                "selector": "#submit"
+            },
+            {
+                "action": "screenshot",
+                "fileName": "random input 2"
+            },
+            {
+                "action": "refresh",
+                "waitUntil": "load"
+            }
+        ],
+        "shouldSucceed": true
+    },
+    "empty firstName": {
+        "actions": [
+            {
+                "action": "visitPage",
+                "url": "http://localhost:5173",
+                "waitUntil": "load"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "text",
+                "selector": "#firstName",
+                "value": ""
+            },
+            {
+                "action": "changeInput",
+                "inputType": "text",
+                "selector": "#lastName",
+                "value": "third"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "date",
+                "selector": "#dateOfBirth",
+                "value": "02-01-2000"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "radio",
+                "selector": "#male",
+                "value": "Male"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "checkbox",
+                "selector": "#Badminton",
+                "value": [
+                    "Badminton"
+                ]
+            },
+            {
+                "action": "delay",
+                "timeInMs": 1000
+            },
+            {
+                "action": "click",
+                "selector": "#submit"
+            },
+            {
+                "action": "screenshot",
+                "fileName": "empty firstName"
+            },
+            {
+                "action": "refresh",
+                "waitUntil": "load"
+            }
+        ],
+        "shouldSucceed": false
+    },
+    "empty lastName": {
+        "actions": [
+            {
+                "action": "visitPage",
+                "url": "http://localhost:5173",
+                "waitUntil": "load"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "text",
+                "selector": "#firstName",
+                "value": "fourth"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "text",
+                "selector": "#lastName",
+                "value": ""
+            },
+            {
+                "action": "changeInput",
+                "inputType": "date",
+                "selector": "#dateOfBirth",
+                "value": "02-01-2000"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "radio",
+                "selector": "#male",
+                "value": "Male"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "checkbox",
+                "selector": "#Badminton",
+                "value": [
+                    "Badminton"
+                ]
+            },
+            {
+                "action": "delay",
+                "timeInMs": 1000
+            },
+            {
+                "action": "click",
+                "selector": "#submit"
+            },
+            {
+                "action": "screenshot",
+                "fileName": "empty lastName"
+            },
+            {
+                "action": "refresh",
+                "waitUntil": "load"
+            }
+        ],
+        "shouldSucceed": false
+    },
+    "empty dateOfBirth": {
+        "actions": [
+            {
+                "action": "visitPage",
+                "url": "http://localhost:5173",
+                "waitUntil": "load"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "text",
+                "selector": "#firstName",
+                "value": "fifth"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "text",
+                "selector": "#lastName",
+                "value": "fifth"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "date",
+                "selector": "#dateOfBirth",
+                "value": ""
+            },
+            {
+                "action": "changeInput",
+                "inputType": "radio",
+                "selector": "#male",
+                "value": "Male"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "checkbox",
+                "selector": "#Badminton",
+                "value": [
+                    "Badminton"
+                ]
+            },
+            {
+                "action": "delay",
+                "timeInMs": 1000
+            },
+            {
+                "action": "click",
+                "selector": "#submit"
+            },
+            {
+                "action": "screenshot",
+                "fileName": "empty dateOfBirth"
+            },
+            {
+                "action": "refresh",
+                "waitUntil": "load"
+            }
+        ],
+        "shouldSucceed": false
+    },
+    "empty gender": {
+        "actions": [
+            {
+                "action": "visitPage",
+                "url": "http://localhost:5173",
+                "waitUntil": "load"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "text",
+                "selector": "#firstName",
+                "value": "fifth"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "text",
+                "selector": "#lastName",
+                "value": "fifth"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "date",
+                "selector": "#dateOfBirth",
+                "value": "02-01-2000"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "radio",
+                "selector": "",
+                "value": ""
+            },
+            {
+                "action": "changeInput",
+                "inputType": "checkbox",
+                "selector": "#Badminton",
+                "value": [
+                    "Badminton"
+                ]
+            },
+            {
+                "action": "delay",
+                "timeInMs": 1000
+            },
+            {
+                "action": "click",
+                "selector": "#submit"
+            },
+            {
+                "action": "screenshot",
+                "fileName": "empty gender"
+            },
+            {
+                "action": "refresh",
+                "waitUntil": "load"
+            }
+        ],
+        "shouldSucceed": false
+    },
+    "empty hobby": {
+        "actions": [
+            {
+                "action": "visitPage",
+                "url": "http://localhost:5173",
+                "waitUntil": "load"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "text",
+                "selector": "#firstName",
+                "value": "sixth"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "text",
+                "selector": "#lastName",
+                "value": "sixth"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "date",
+                "selector": "#dateOfBirth",
+                "value": "02-01-2000"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "radio",
+                "selector": "#female",
+                "value": "Female"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "checkbox",
+                "selector": "",
+                "value": []
+            },
+            {
+                "action": "delay",
+                "timeInMs": 1000
+            },
+            {
+                "action": "click",
+                "selector": "#submit"
+            },
+            {
+                "action": "screenshot",
+                "fileName": "empty hobby"
+            },
+            {
+                "action": "refresh",
+                "waitUntil": "load"
+            }
+        ],
+        "shouldSucceed": false
+    },
+    "random input 3": {
+        "actions": [
+            {
+                "action": "visitPage",
+                "url": "http://localhost:5173",
+                "waitUntil": "load"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "text",
+                "selector": "#firstName",
+                "value": "seventh"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "text",
+                "selector": "#lastName",
+                "value": "seventh"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "date",
+                "selector": "#dateOfBirth",
+                "value": "02-01-2000"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "radio",
+                "selector": "#female",
+                "value": "Female"
+            },
+            {
+                "action": "changeInput",
+                "inputType": "checkbox",
+                "selector": "#Badminton",
+                "value": [
+                    "Badminton"
+                ]
+            },
+            {
+                "action": "delay",
+                "timeInMs": 1000
+            },
+            {
+                "action": "click",
+                "selector": "#submit"
+            },
+            {
+                "action": "screenshot",
+                "fileName": "random input 3"
+            },
+            {
+                "action": "refresh",
+                "waitUntil": "load"
+            }
+        ],
+        "shouldSucceed": false
+    }
+}
