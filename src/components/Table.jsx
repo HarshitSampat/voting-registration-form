@@ -16,8 +16,6 @@ const Table = ({ tableData,onDelete,onEdit }) => {
     };
 
     const handleDelete = (index) => {
-        // const fullName = tableData[index].firstName + ' '+ tableData[index].lastName
-        // alert( `Are you sure you want to Delete ${fullName}?`)
         onDelete(index);
         closeDeleteModal()
     }

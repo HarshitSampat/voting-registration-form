@@ -251,7 +251,6 @@ const Registration = () => {
         setEditIndex(index);
         handleCityDropDown(data.state)
         setFormData(data);
-
     }
 
     const clearFormData = () =>{
@@ -423,6 +422,7 @@ const Registration = () => {
                     </label>
                     <select
                         id="stateDropdown"
+                        name="state"
                         className="form-control"
                         value={formData.state}
                         onChange={handleStateChange}
@@ -445,6 +445,7 @@ const Registration = () => {
                     </label>
                     <select
                         id="cityDropdown"
+                        name="city"
                         className="form-control"
                         value={formData.city}
                         onChange={handleCityChange}
