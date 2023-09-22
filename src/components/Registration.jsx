@@ -24,7 +24,7 @@ const Registration = () => {
         ageError:'',
         statError: '',
         cityError: '',
-
+        dublicateErrormsg:''
     });
 
     const [tableData, setTableData] = useState([]);
@@ -32,12 +32,15 @@ const Registration = () => {
     const [cities, setCities] = useState([]);
     const [isEditing, setIsEditing] = useState(false);
     const [editIndex, setEditIndex] = useState(-1);
-
+    const [dublicateErrorMsg,setDublicateErrorMsg] = useState('')
     useEffect(() => {
         // Fetch the list of states from the API and setStates
         const statesFromData = Object.keys(statData);
         statesFromData.sort()
         setStates(statesFromData);
+        
+        let userdata = localStorage.getItem("userData")
+        if(userdata) setTableData(JSON.parse(userdata)) 
     }, []);
 
 
@@ -79,7 +82,8 @@ const Registration = () => {
         if (formData.dateOfBirth === '') {
             newErrors.dobError = 'Please Select Date of Birth';
             valid = false;
-        } else {
+        } 
+        else {
             newErrors.dobError = '';
         }
 
@@ -99,18 +103,23 @@ const Registration = () => {
             newErrors.hobbiesError = '';
         }
 
-        // age
-        if(formData.age.length===0){
+        // age validation
+        if(formData.age === null){
             newErrors.ageError = 'Age is required'
             valid = false
         }
-        else if(formData.age<0){
+        else if(formData.age<=0){
             newErrors.ageError = 'Age should be a positive number'
+            valid=false
+        }else if(formData.age>0 && formData.age<18){
+            newErrors.ageError = 'Age should be more then 18'
         }
         else{
             newErrors.ageError = ''
         }
 
+
+        // State Validation
         if (formData.state.length === 0) {
             newErrors.statError = 'State is required';
             valid = false
@@ -118,6 +127,7 @@ const Registration = () => {
             newErrors.statError = ''
         }
 
+        // city validation
         if (formData.city.length === 0) {
             newErrors.cityError = 'City is required'
         } else {
@@ -127,6 +137,10 @@ const Registration = () => {
         return valid;
     };
 
+    const setlocalStoreageData = (updatedTableData) =>{
+        localStorage.setItem("userData",JSON.stringify(updatedTableData));
+    }
+
     const handleFormSubmit = (e) => {
         e.preventDefault();
         if (validateForm()) {
@@ -135,45 +149,54 @@ const Registration = () => {
                 updatedTableData[editIndex] = { ...formData };
                 setTableData(updatedTableData);
                 // Reset form and state after update
+                setlocalStoreageData(updatedTableData)
                 setIsEditing(false);
                 setEditIndex(-1);
+                clearFormData()
             }
             else {
-                const isDuplicate = tableData.some((data) => {
-                    return (
-                        data.firstName === formData.firstName &&
-                        data.lastName === formData.lastName &&
-                        data.dateOfBirth === formData.dateOfBirth &&
-                        data.gender === formData.gender &&
-                        data.state === formData.state &&
-                        data.city === formData.city
-                    );
-                });
-        
+                const isDuplicate = checkDublicate()
                 if (!isDuplicate) {
+                    setDublicateErrorMsg('')
                     const newRowData = { ...formData };
                     setTableData([...tableData, newRowData]);
+                    // const userData = tableData.push(newRowData)
+                    setlocalStoreageData([...tableData, newRowData])
+                   clearFormData()
                 } else {
-                    alert("Duplicate data is not allowed.");
+                    setDublicateErrorMsg('Dublicate data entries are not allowed')
                 }
 
             }
-            setFormData({
-                firstName: '',
-                lastName: '',
-                dateOfBirth: '',
-                gender: '',
-                hobbies: [],
-                age:null,
-                state: '',
-                city: ''
-            });
+           
         }
     };
+
+    const checkDublicate = ()=>{
+      let isDublicate =  tableData.some((data) => {
+            return (
+                data.firstName === formData.firstName &&
+                data.lastName === formData.lastName &&
+                data.dateOfBirth === formData.dateOfBirth &&
+                data.gender === formData.gender &&
+                data.state === formData.state &&
+                data.city === formData.city
+            );
+        });
+        if(isDublicate){
+            setDublicateErrorMsg('Dublicate data is not allowed')
+            return true
+        }
+        else{
+            setDublicateErrorMsg('')
+            return false
+        }
+    }
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
+       
     };
 
     const handleCheckboxChange = (e) => {
@@ -183,6 +206,12 @@ const Registration = () => {
             : formData.hobbies.filter((hobby) => hobby !== value);
         setFormData({ ...formData, hobbies: updatedHobbies });
     };
+
+    const handleCityDropDown = (selectedState)=>{
+        const citiesForSelectedState = statData[selectedState];
+            citiesForSelectedState.sort()
+            setCities(citiesForSelectedState);
+    }
 
     const handleStateChange = (e) => {
         const selectedState = e.target.value;
@@ -195,9 +224,7 @@ const Registration = () => {
 
         // Update the city dropdown based on the selected state
         if (selectedState) {
-            const citiesForSelectedState = statData[selectedState];
-            citiesForSelectedState.sort()
-            setCities(citiesForSelectedState);
+            handleCityDropDown(selectedState)
         } else {
             setCities([]);
         }
@@ -216,18 +243,34 @@ const Registration = () => {
         const updatedTableData = tableData.filter((_, index) => index !== indexToDelete);
         // Update the tableData state with the updated data
         setTableData(updatedTableData);
+        setlocalStoreageData(updatedTableData)
     };
 
     const handleEdit = (data, index) => {
         setIsEditing(true);
         setEditIndex(index);
+        handleCityDropDown(data.state)
         setFormData(data);
+
+    }
+
+    const clearFormData = () =>{
+        setFormData({
+            firstName: '',
+            lastName: '',
+            dateOfBirth: '',
+            gender: '',
+            hobbies: [],
+            age:null,
+            state: '',
+            city: ''
+        });
     }
 
     return (
         <div className="container mt-5">
             <h1>Voting Registration Form</h1>
-            <form onSubmit={handleFormSubmit}>
+            <form >
                 <div className="mb-3">
                     <label htmlFor="firstName" className="form-label">First Name</label>
                     <input
@@ -417,7 +460,8 @@ const Registration = () => {
                 </div>
 
                 <div className="mb-3">
-                    <button type="submit" className="btn btn-primary" id='submit'>
+                    <div className='text-danger'><strong>{dublicateErrorMsg}</strong></div>
+                    <button type="button" className="btn btn-primary" id='submit' onClick={handleFormSubmit}>
                         {isEditing ? 'Update' : 'Submit'}</button>
                 </div>
             </form>
