@@ -1,13 +1,24 @@
 import { useEffect,useState } from "react"
+import { useNavigate } from "react-router-dom";
+import Navbar from "./Navbar";
 
-const Table = ({ tableData,onDelete,onEdit }) => {
+const Table = () => {
+    const navigate = useNavigate()
 
     const [deleteIndex, setDeleteIndex] = useState(-1);
     const [fullName,setFullName] = useState('')
+    const [userData, setUserData] = useState([])
+
+    useEffect(() => {
+        
+        let userdata = localStorage.getItem("userData")
+        if(userdata) setUserData(JSON.parse(userdata)) 
+        
+    }, []);
 
     const openDeleteModal = (index) => {
         setDeleteIndex(index);
-        let fullname = tableData[index].firstName+' '+tableData[index].lastName
+        let fullname = userData[index].firstName+' '+userData[index].lastName
         setFullName(fullname)
     };
 
@@ -16,13 +27,23 @@ const Table = ({ tableData,onDelete,onEdit }) => {
     };
 
     const handleDelete = (index) => {
-        onDelete(index);
+        userData.splice(index,1)
+        localStoreDataValues(userData)
         closeDeleteModal()
     }
 
+    const localStoreDataValues = (userData)=>{
+        localStorage.setItem("userData",JSON.stringify(userData))
+    }
+
+    const handleEdit = (data,index) => {
+        navigate(`/edit/userdata/${index}`);
+    }
+
     return (
-        <div>
-        <table className="table">
+        <div className="container">  
+        <Navbar/>  
+        <table className="table mt-3">
             <thead>
                 <tr>
                     <th>First Name</th>
@@ -38,7 +59,7 @@ const Table = ({ tableData,onDelete,onEdit }) => {
                 </tr>
             </thead>
             <tbody>
-                {tableData.sort((a, b) =>
+                {userData.sort((a, b) =>
                     a.firstName.localeCompare(b.firstName)
                 ).map((data, index) => (
                     <tr key={`tr${index + 1}`}>
@@ -51,7 +72,7 @@ const Table = ({ tableData,onDelete,onEdit }) => {
                         <td>{data.state}</td>
                         <td>{data.city}</td>
                         <td className="cursor-pointer">
-                            <div onClick={()=>onEdit(data,index)} className="">
+                            <div onClick={()=>handleEdit(data,index)} className="">
                                 <button id={index} className="btn btn-primary">
                                     <i className="bi bi-pencil-square me-1"></i>
                                     Edit
@@ -83,7 +104,7 @@ const Table = ({ tableData,onDelete,onEdit }) => {
                             ></button>
                         </div>
                         <div className="modal-body">
-                            Are you sure you want to delete this {fullName}?
+                            Are you sure you want to delete {fullName}?
                         </div>
                         <div className="modal-footer">
                             <button
