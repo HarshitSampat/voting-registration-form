@@ -7,42 +7,50 @@ const app = express();
 app.get('/', (req, res) => {
     let stateAndCity = [];
 
-    for(let state in data){
-        var stateJson  = {}
-        let stateID = stateAndCity.length + 1
-        stateJson['ID']  = stateID
-        stateJson['name'] = state
-        stateJson['ParentID'] = null
-        stateJson['ControlID'] = "stateDropdown"
+    statesData = []
 
-        stateAndCity.push(stateJson)
-        
-        for(city in data[state]){
-            let cityJson = {}
-            let cityID = stateAndCity.length+1
-            let ParentOfCity = stateID
-            cityJson['ID'] =cityID;
-            cityJson['name'] = city;
-            cityJson['ParentID'] = ParentOfCity
-            cityJson['ControlID'] = "cityDropdown"
-            stateAndCity.push(cityJson)
-            
-            
-            for(area in data[state][city]){
-                let parentAreaId = cityID
-                let areaJson = {}
-                areaJson['ID'] =stateAndCity.length+1;
-                areaJson['name'] = area;
-                areaJson['ParentID'] = parentAreaId
-                areaJson['ControlID'] = "areaDropdown"
-                stateAndCity.push(areaJson)
+    var statesData = []
+    for (let state in data) {
+        if (statesData.length < 3) {
+            console.log(statesData);
+            statesData.push(state)
+            var stateJson = {}
+            let stateID = stateAndCity.length + 1
+            stateJson['ID'] = stateID
+            stateJson['name'] = state
+            stateJson['parentId'] = null
+            stateJson['controlId'] = "stateDropdown"
+
+            stateAndCity.push(stateJson)
+
+            for (city in data[state]) {
+                let cityJson = {}
+                let cityID = stateAndCity.length + 1
+                let ParentOfCity = stateID
+                cityJson['ID'] = cityID;
+                cityJson['name'] = city;
+                cityJson['parentId'] = ParentOfCity
+                cityJson['controlId'] = "cityDropdown"
+                stateAndCity.push(cityJson)
+
+
+                for (area in data[state][city]) {
+                    let parentAreaId = cityID
+                    let areaJson = {}
+                    areaJson['ID'] = stateAndCity.length + 1;
+                    areaJson['name'] = area;
+                    areaJson['parentId'] = parentAreaId
+                    areaJson['controlId'] = "areaDropdown"
+                    stateAndCity.push(areaJson)
+                }
             }
         }
+
 
     }
 
     res.send(stateAndCity)
-   
+
 
     // fs.writeFile('./newJson.json', JSON.stringify(newJson), (err) => {
     //     if (err) {

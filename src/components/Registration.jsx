@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom'
-import indianState from  '../assets/indianStateandAreawithcode.json'
+import indianState from '../assets/indianStateandAreawithcode.json'
 import Navbar from './Navbar';
 import { useNavigate } from "react-router-dom";
 
@@ -17,7 +17,8 @@ const Registration = () => {
         age: null,
         state: '',
         city: '',
-        area: ''
+        area: '',
+        salary: '',
     });
 
     const [errors, setErrors] = useState({
@@ -30,7 +31,8 @@ const Registration = () => {
         statError: '',
         cityError: '',
         areaError: '',
-        dublicateErrormsg: ''
+        dublicateErrormsg: '',
+        salaryErrorMsg : ''
     });
 
     const [tableData, setTableData] = useState([]);
@@ -41,12 +43,12 @@ const Registration = () => {
     const [editIndex, setEditIndex] = useState(-1);
     const [dublicateErrorMsg, setDublicateErrorMsg] = useState('')
     useEffect(() => {
-        let indianStates = indianState.filter(x=> x.ParentID=== null)
+        let indianStates = indianState.filter(x => x.parentId === null)
         let stateNames = []
-        if(indianState)
-        indianStates.forEach(element => {
-           stateNames.push(element.name)
-        });
+        if (indianState)
+            indianStates.forEach(element => {
+                stateNames.push(element.name)
+            });
         setStates(stateNames)
         const url = window.location.href;
 
@@ -104,22 +106,22 @@ const Registration = () => {
             newErrors.dobError = 'Please Select Date of Birth';
             valid = false;
         }
-        else if(formData.dateOfBirth || formData.age){
-           let age =  countAge(formData.dateOfBirth)
-           if(age < 18 || age >120 )  {
-            if(age < 0){
-                newErrors.dobError = 'Enter Valid birthdate'
-                formData.age = 0
-                valid = false
-            }else{
-            newErrors.dobError  = 'Enter Valid birthdate'
-            newErrors.ageError  = 'Age should be between 18 to 120'
-            valid =false
-        }
-           }else{
-            newErrors.dobError = '' 
-            newErrors.ageError = ''
-           }
+        else if (formData.dateOfBirth || formData.age) {
+            let age = countAge(formData.dateOfBirth)
+            if (age < 18 || age > 120) {
+                if (age < 0) {
+                    newErrors.dobError = 'Enter Valid birthdate'
+                    formData.age = 0
+                    valid = false
+                } else {
+                    newErrors.dobError = 'Enter Valid birthdate'
+                    newErrors.ageError = 'Age should be between 18 to 120'
+                    valid = false
+                }
+            } else {
+                newErrors.dobError = ''
+                newErrors.ageError = ''
+            }
         }
         else {
             newErrors.dobError = '';
@@ -153,7 +155,7 @@ const Registration = () => {
         // city validation
         if (formData.city.length === 0) {
             newErrors.cityError = 'City is required'
-            valid =false
+            valid = false
         } else {
             newErrors.cityError = ''
         }
@@ -161,7 +163,7 @@ const Registration = () => {
         // Area Validation
         if (formData.area.length === 0) {
             newErrors.areaError = 'Area Is required'
-            valid=false
+            valid = false
         } else {
             newErrors.areaError = ''
         }
@@ -242,11 +244,11 @@ const Registration = () => {
     };
 
     const handleCityDropDown = (selectedState) => {
-        let stateId =  getStatID(selectedState)
-        let selectedStateCities =  indianState.filter(x=>x.ParentID === stateId)
+        let stateId = getStatID(selectedState)
+        let selectedStateCities = indianState.filter(x => x.parentId === stateId)
         let cityDropdownvalues = []
-        
-        selectedStateCities.forEach (x => {
+
+        selectedStateCities.forEach(x => {
             cityDropdownvalues.push(x.name)
         })
         setCities(cityDropdownvalues);
@@ -272,7 +274,7 @@ const Registration = () => {
     const handleCityChange = (e) => {
         const selectedCity = e.target.value;
 
-  
+
         // Update the form data and clear the city error message
         setFormData({ ...formData, city: selectedCity });
         setErrors({ ...errors, cityError: '' });
@@ -306,13 +308,13 @@ const Registration = () => {
 
     const handleAreaDropDown = (selectedCity) => {
         let getCityId = getSelectedCityId(selectedCity)
-        let areaValues = indianState.filter(x=>x.ParentID === getCityId)
+        let areaValues = indianState.filter(x => x.parentId === getCityId)
         let setAreavalues = DropdownValues(areaValues)
         console.log(setAreavalues);
         setAreas(setAreavalues)
     }
-    
-    const countAge = (dateOfBirth) =>{
+
+    const countAge = (dateOfBirth) => {
         let today = new Date()
         let getCurrYear = today.getFullYear()
         let getBirthYear = dateOfBirth.split('-')[0]
@@ -321,18 +323,18 @@ const Registration = () => {
         return age
     }
 
-    const getStatID = (selectedState) =>{
-        let selectedStateData = indianState.find(x=> x.name=== selectedState)
-        return selectedStateData.ID 
+    const getStatID = (selectedState) => {
+        let selectedStateData = indianState.find(x => x.name === selectedState)
+        return selectedStateData.ID
     }
 
-    const getSelectedCityId = (selecteCity) =>{
-        let cityId = indianState.find(x => x.name===selecteCity)
+    const getSelectedCityId = (selecteCity) => {
+        let cityId = indianState.find(x => x.name === selecteCity)
         return cityId.ID
     }
 
-    const DropdownValues =  (data)=> {
-        let cityState =  []
+    const DropdownValues = (data) => {
+        let cityState = []
         data.forEach(element => {
             cityState.push(element.name)
         });
@@ -580,7 +582,24 @@ const Registration = () => {
                         </div>
                     </div>
 
-                    <div className="mb-3">
+
+                    <div className='row'>
+                    <div className='col-6'>
+                            <label htmlFor="age" className="form-label">Salary</label>
+                            <input
+                                type="number"
+                                className="form-control"
+                                id="salary"
+                                name="salary"
+                                value={formData?.salary === null ? '' : formData?.salary}
+                                onChange={handleInputChange}
+                                onBlur={validateForm}
+                            />
+                            <span className="text-danger">{errors.ageError}</span>
+                        </div>
+                    </div>
+
+                    <div className="mb-3 mt-4">
                         <div className='text-danger'><strong>{dublicateErrorMsg}</strong></div>
                         <button type="button" className="btn btn-primary" id='submit' onClick={handleFormSubmit}>
                             {isEditing ? 'Update' : 'Submit'}</button>
