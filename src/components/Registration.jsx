@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom'
-import statData from '../assets/indinStateDetails.json'
+import indianState from  '../assets/indianStateandAreawithcode.json'
 import Navbar from './Navbar';
+import { useNavigate } from "react-router-dom";
 
 const Registration = () => {
     const routerParams = useParams()
     const userId = routerParams['index']
-
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -15,7 +16,8 @@ const Registration = () => {
         hobbies: [],
         age: null,
         state: '',
-        city: ''
+        city: '',
+        area: ''
     });
 
     const [errors, setErrors] = useState({
@@ -27,21 +29,26 @@ const Registration = () => {
         ageError: '',
         statError: '',
         cityError: '',
+        areaError: '',
         dublicateErrormsg: ''
     });
 
     const [tableData, setTableData] = useState([]);
     const [states, setStates] = useState([]);
     const [cities, setCities] = useState([]);
+    const [area, setAreas] = useState([])
     const [isEditing, setIsEditing] = useState(false);
     const [editIndex, setEditIndex] = useState(-1);
     const [dublicateErrorMsg, setDublicateErrorMsg] = useState('')
     useEffect(() => {
+        let indianStates = indianState.filter(x=> x.ParentID=== null)
+        let stateNames = []
+        if(indianState)
+        indianStates.forEach(element => {
+           stateNames.push(element.name)
+        });
+        setStates(stateNames)
         const url = window.location.href;
-        // Fetch the list of states from the API and setStates
-        const statesFromData = Object.keys(statData);
-        statesFromData.sort()
-        setStates(statesFromData);
 
         let userdata = localStorage.getItem("userData")
         if (userdata) setTableData(JSON.parse(userdata))
@@ -51,6 +58,8 @@ const Registration = () => {
             setIsEditing(true)
             setEditIndex(userId)
             handleCityDropDown(userdata[userId].state)
+
+            handleAreaDropDown(userdata[userId].city)
         }
         else setFormData(formData)
     }, []);
@@ -95,6 +104,23 @@ const Registration = () => {
             newErrors.dobError = 'Please Select Date of Birth';
             valid = false;
         }
+        else if(formData.dateOfBirth || formData.age){
+           let age =  countAge(formData.dateOfBirth)
+           if(age < 18 || age >120 )  {
+            if(age < 0){
+                newErrors.dobError = 'Enter Valid birthdate'
+                formData.age = 0
+                valid = false
+            }else{
+            newErrors.dobError  = 'Enter Valid birthdate'
+            newErrors.ageError  = 'Age should be between 18 to 120'
+            valid =false
+        }
+           }else{
+            newErrors.dobError = '' 
+            newErrors.ageError = ''
+           }
+        }
         else {
             newErrors.dobError = '';
         }
@@ -115,22 +141,6 @@ const Registration = () => {
             newErrors.hobbiesError = '';
         }
 
-        // age validation
-        if (formData.age === null) {
-            newErrors.ageError = 'Age is required'
-            valid = false
-        }
-        else if (formData.age <= 0) {
-            newErrors.ageError = 'Age should be a positive number'
-            valid = false
-        } else if (formData.age > 0 && formData.age < 18) {
-            newErrors.ageError = 'Age should be more then 18'
-            valid = false
-        }
-        else {
-            newErrors.ageError = ''
-        }
-
 
         // State Validation
         if (formData.state.length === 0) {
@@ -143,17 +153,25 @@ const Registration = () => {
         // city validation
         if (formData.city.length === 0) {
             newErrors.cityError = 'City is required'
+            valid =false
         } else {
             newErrors.cityError = ''
         }
+
+        // Area Validation
+        if (formData.area.length === 0) {
+            newErrors.areaError = 'Area Is required'
+            valid=false
+        } else {
+            newErrors.areaError = ''
+        }
+
         setErrors(newErrors);
         return valid;
     };
 
     const setlocalStoreageData = (updatedTableData) => {
-        console.log(updatedTableData);
         updatedTableData = updatedTableData.sort((a, b) => a.firstName.localeCompare(b.firstName))
-
         localStorage.setItem("userData", JSON.stringify(updatedTableData));
     }
 
@@ -163,13 +181,13 @@ const Registration = () => {
             if (isEditing) {
                 const updatedTableData = [...tableData];
                 updatedTableData[editIndex] = { ...formData };
-                console.log(updatedTableData);
                 setTableData(updatedTableData);
                 // Reset form and state after update
                 setlocalStoreageData(updatedTableData)
                 setIsEditing(false);
                 setEditIndex(-1);
                 clearFormData()
+                navigate('/userdata')
             }
             else {
                 const isDuplicate = checkDublicate()
@@ -224,9 +242,14 @@ const Registration = () => {
     };
 
     const handleCityDropDown = (selectedState) => {
-        const citiesForSelectedState = statData[selectedState];
-        citiesForSelectedState.sort()
-        setCities(citiesForSelectedState);
+        let stateId =  getStatID(selectedState)
+        let selectedStateCities =  indianState.filter(x=>x.ParentID === stateId)
+        let cityDropdownvalues = []
+        
+        selectedStateCities.forEach (x => {
+            cityDropdownvalues.push(x.name)
+        })
+        setCities(cityDropdownvalues);
     }
 
     const handleStateChange = (e) => {
@@ -249,26 +272,24 @@ const Registration = () => {
     const handleCityChange = (e) => {
         const selectedCity = e.target.value;
 
+  
         // Update the form data and clear the city error message
         setFormData({ ...formData, city: selectedCity });
         setErrors({ ...errors, cityError: '' });
+
+        if (selectedCity) {
+            handleAreaDropDown(selectedCity)
+        }
+        else {
+            setAreas([])
+        }
     };
 
-    const handleDelete = (indexToDelete) => {
-        // Create a copy of the tableData without the item to delete
-        const updatedTableData = tableData.filter((_, index) => index !== indexToDelete);
-        // Update the tableData state with the updated data
-        setTableData(updatedTableData);
-        setlocalStoreageData(updatedTableData)
-    };
-
-    // const handleEdit = (data, index) => {
-    //     setIsEditing(true);
-    //     setEditIndex(index);
-    //     handleCityDropDown(data.state)
-    //     setFormData(data);
-    // }
-
+    const handleAreaChange = (e) => {
+        const selectedArea = e.target.value
+        setFormData({ ...formData, area: selectedArea });
+        setErrors({ ...errors, areaError: '' });
+    }
     const clearFormData = () => {
         setFormData({
             firstName: '',
@@ -278,55 +299,119 @@ const Registration = () => {
             hobbies: [],
             age: null,
             state: '',
-            city: ''
+            city: '',
+            area: ''
         });
+    }
+
+    const handleAreaDropDown = (selectedCity) => {
+        let getCityId = getSelectedCityId(selectedCity)
+        let areaValues = indianState.filter(x=>x.ParentID === getCityId)
+        let setAreavalues = DropdownValues(areaValues)
+        console.log(setAreavalues);
+        setAreas(setAreavalues)
+    }
+    
+    const countAge = (dateOfBirth) =>{
+        let today = new Date()
+        let getCurrYear = today.getFullYear()
+        let getBirthYear = dateOfBirth.split('-')[0]
+        let age = getCurrYear - getBirthYear
+        formData.age = age
+        return age
+    }
+
+    const getStatID = (selectedState) =>{
+        let selectedStateData = indianState.find(x=> x.name=== selectedState)
+        return selectedStateData.ID 
+    }
+
+    const getSelectedCityId = (selecteCity) =>{
+        let cityId = indianState.find(x => x.name===selecteCity)
+        return cityId.ID
+    }
+
+    const DropdownValues =  (data)=> {
+        let cityState =  []
+        data.forEach(element => {
+            cityState.push(element.name)
+        });
+        return cityState
     }
 
     return (
         <div className='container'>
             <Navbar />
-            <div className="container mt-5">
-                <h1>Voting Registration Form</h1>
-                <form >
-                    <div className="mb-3">
-                        <label htmlFor="firstName" className="form-label">First Name</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            id="firstName"
-                            name="firstName"
-                            value={formData?.firstName}
-                            onChange={handleInputChange}
-                            onBlur={validateForm}
-                        />
-                        <span className="text-danger">{errors.firstNameError}</span>
+            <div className="container mt-4">
+                <h1 className='mb-3 text-center'>Voting Registration Form</h1>
+                <form>
+                    {/* firstname Lastname row */}
+                    <div className='row'>
+                        <div className='col-md-6'>
+                            <div className="mb-3">
+                                <label htmlFor="firstName" className="form-label">First Name</label>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    id="firstName"
+                                    name="firstName"
+                                    value={formData?.firstName}
+                                    onChange={handleInputChange}
+                                    onBlur={validateForm}
+                                />
+                                <span className="text-danger">{errors.firstNameError}</span>
+                            </div>
+                        </div>
+                        <div className='col-md-6'>
+                            <div className="mb-3">
+                                <label htmlFor="lastName" className="form-label">Last Name</label>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    id="lastName"
+                                    name="lastName"
+                                    value={formData?.lastName}
+                                    onChange={handleInputChange}
+                                    onBlur={validateForm}
+                                />
+                                <span className="text-danger">{errors.lastNameError}</span>
+                            </div>
+                        </div>
                     </div>
-                    <div className="mb-3">
-                        <label htmlFor="lastName" className="form-label">Last Name</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            id="lastName"
-                            name="lastName"
-                            value={formData?.lastName}
-                            onChange={handleInputChange}
-                            onBlur={validateForm}
-                        />
-                        <span className="text-danger">{errors.lastNameError}</span>
+
+                    {/* DateOf birth and age row */}
+                    <div className='row'>
+                        <div className='col-6'>
+                            <div className="mb-3">
+                                <label htmlFor="dateOfBirth" className="form-label">Date of Birth</label>
+                                <input
+                                    type="date"
+                                    className="form-control"
+                                    id="dateOfBirth"
+                                    name="dateOfBirth"
+                                    value={formData?.dateOfBirth}
+                                    onChange={handleInputChange}
+                                    onBlur={validateForm}
+                                />
+                                <span className="text-danger">{errors.dobError}</span>
+                            </div>
+                        </div>
+                        <div className='col-6'>
+                            <label htmlFor="age" className="form-label">Age</label>
+                            <input
+                                type="number"
+                                className="form-control"
+                                id="age"
+                                name="age"
+                                value={formData?.age === null ? '' : formData?.age}
+                                onChange={handleInputChange}
+                                onBlur={validateForm}
+                                disabled
+                            />
+                            <span className="text-danger">{errors.ageError}</span>
+                        </div>
                     </div>
-                    <div className="mb-3">
-                        <label htmlFor="dateOfBirth" className="form-label">Date of Birth</label>
-                        <input
-                            type="date"
-                            className="form-control"
-                            id="dateOfBirth"
-                            name="dateOfBirth"
-                            value={formData?.dateOfBirth}
-                            onChange={handleInputChange}
-                            onBlur={validateForm}
-                        />
-                        <span className="text-danger">{errors.dobError}</span>
-                    </div>
+
                     <div className="mb-3">
                         <div className='row'>
                             <div className='col-6'>
@@ -361,121 +446,138 @@ const Registration = () => {
                                 <span className="text-danger">{errors.genderError}</span>
                             </div>
                             <div className='col-6'>
-                                <label htmlFor="age" className="form-label">Age</label>
-                                <input
-                                    type="number"
-                                    className="form-control"
-                                    id="age"
-                                    name="age"
-                                    value={formData?.age === null ? '' : formData?.age}
-                                    onChange={handleInputChange}
-                                    onBlur={validateForm}
-                                />
-                                <span className="text-danger">{errors.ageError}</span>
+                                <div className="mb-3">
+                                    <label className="form-label">Hobbies</label>
+                                    <div className="form-check">
+                                        <input
+                                            type="checkbox"
+                                            className="form-check-input"
+                                            id="Chess"
+                                            name="hobbies"
+                                            value="Chess"
+                                            checked={formData?.hobbies.includes('Chess')}
+                                            onChange={handleCheckboxChange}
+                                            onBlur={validateForm}
+                                        />
+                                        <label htmlFor="Chess" className="form-check-label">Chess</label>
+                                    </div>
+                                    <div className="form-check">
+                                        <input
+                                            type="checkbox"
+                                            className="form-check-input"
+                                            id="Badminton"
+                                            name="hobbies"
+                                            value="Badminton"
+                                            checked={formData?.hobbies.includes('Badminton')}
+                                            onChange={handleCheckboxChange}
+                                            onBlur={validateForm}
+                                        />
+                                        <label htmlFor="Badminton" className="form-check-label">Badminton</label>
+                                    </div>
+                                    <div className="form-check">
+                                        <input
+                                            type="checkbox"
+                                            className="form-check-input"
+                                            id="Hockey"
+                                            name="hobbies"
+                                            value="Hockey"
+                                            checked={formData?.hobbies.includes('Hockey')}
+                                            onChange={handleCheckboxChange}
+                                            onBlur={validateForm}
+                                        />
+                                        <label htmlFor="Hockey" className="form-check-label">Hockey</label>
+                                    </div>
+                                    <div className="form-check">
+                                        <input
+                                            type="checkbox"
+                                            className="form-check-input"
+                                            id="Reading"
+                                            name="hobbies"
+                                            value="Reading"
+                                            checked={formData?.hobbies.includes('Reading')}
+                                            onChange={handleCheckboxChange}
+                                            onBlur={validateForm}
+                                        />
+                                        <label htmlFor="Reading" className="form-check-label">Reading</label>
+                                    </div>
+                                    <span className="text-danger">{errors.hobbiesError}</span>
+                                </div>
                             </div>
                         </div>
 
                     </div>
-                    <div className="mb-3">
-                        <label className="form-label">Hobbies</label>
-                        <div className="form-check">
-                            <input
-                                type="checkbox"
-                                className="form-check-input"
-                                id="Chess"
-                                name="hobbies"
-                                value="Chess"
-                                checked={formData?.hobbies.includes('Chess')}
-                                onChange={handleCheckboxChange}
-                                onBlur={validateForm}
-                            />
-                            <label htmlFor="Chess" className="form-check-label">Chess</label>
-                        </div>
-                        <div className="form-check">
-                            <input
-                                type="checkbox"
-                                className="form-check-input"
-                                id="Badminton"
-                                name="hobbies"
-                                value="Badminton"
-                                checked={formData?.hobbies.includes('Badminton')}
-                                onChange={handleCheckboxChange}
-                                onBlur={validateForm}
-                            />
-                            <label htmlFor="Badminton" className="form-check-label">Badminton</label>
-                        </div>
-                        <div className="form-check">
-                            <input
-                                type="checkbox"
-                                className="form-check-input"
-                                id="Hockey"
-                                name="hobbies"
-                                value="Hockey"
-                                checked={formData?.hobbies.includes('Hockey')}
-                                onChange={handleCheckboxChange}
-                                onBlur={validateForm}
-                            />
-                            <label htmlFor="Hockey" className="form-check-label">Hockey</label>
-                        </div>
-                        <div className="form-check">
-                            <input
-                                type="checkbox"
-                                className="form-check-input"
-                                id="Reading"
-                                name="hobbies"
-                                value="Reading"
-                                checked={formData?.hobbies.includes('Reading')}
-                                onChange={handleCheckboxChange}
-                                onBlur={validateForm}
-                            />
-                            <label htmlFor="Reading" className="form-check-label">Reading</label>
-                        </div>
-                        <span className="text-danger">{errors.hobbiesError}</span>
-                    </div>
-
-                    {/* Select Stats */}
-                    <div className="mb-3">
-                        <label htmlFor="stateDropdown" className="form-label">
-                            Select a State
-                        </label>
-                        <select
-                            id="stateDropdown"
-                            name="state"
-                            className="form-control"
-                            value={formData?.state}
-                            onChange={handleStateChange}
-                        >
-                            <option value="">Select a State</option>
-                            {states.map((state) => (
-                                <option key={state} value={state}>
-                                    {state}
-                                </option>
-                            ))}
-                        </select>
-                        <span className="text-danger">{errors.statError}</span>
-                    </div>
 
 
-                    {/* Select City */}
-                    <div className="mb-3">
-                        <label htmlFor="cityDropdown" className="form-label">
-                            Select a City
-                        </label>
-                        <select
-                            id="cityDropdown"
-                            name="city"
-                            className="form-control"
-                            value={formData?.city}
-                            onChange={handleCityChange}
-                        >
-                            <option value="">Select a City</option>
-                            {cities.map((city) => (
-                                <option key={city} value={city}>
-                                    {city}
-                                </option>
-                            ))}
-                        </select>
-                        <span className="text-danger">{errors.cityError}</span>
+                    {/* Select Stats and city row*/}
+
+                    <div className='row'>
+                        <div className='col-md-4'>
+                            <div className="mb-3">
+                                <label htmlFor="stateDropdown" className="form-label">
+                                    Select a State
+                                </label>
+                                <select
+                                    id="stateDropdown"
+                                    name="state"
+                                    className="form-control"
+                                    value={formData?.state}
+                                    onChange={handleStateChange}
+                                >
+                                    <option value="">Select a State</option>
+                                    {states.map((state) => (
+                                        <option key={state} value={state}>
+                                            {state}
+                                        </option>
+                                    ))}
+                                </select>
+                                <span className="text-danger">{errors.statError}</span>
+                            </div>
+                        </div>
+                        <div className='col-md-4'>
+                            <div className="mb-3">
+                                <label htmlFor="cityDropdown" className="form-label">
+                                    Select a City
+                                </label>
+                                <select
+                                    id="cityDropdown"
+                                    name="city"
+                                    className="form-control"
+                                    value={formData?.city}
+                                    onChange={handleCityChange}
+                                >
+                                    <option value="">Select a City</option>
+                                    {cities.map((city) => (
+                                        <option key={city} value={city}>
+                                            {city}
+                                        </option>
+                                    ))}
+                                </select>
+                                <span className="text-danger">{errors.cityError}</span>
+                            </div>
+                        </div>
+
+                        {/* Area select  */}
+                        <div className='col-md-4'>
+                            <label htmlFor="areaDropdown" className="form-label">
+                                Select Area
+                            </label>
+
+                            <select
+                                id="areaDropdown"
+                                name="area"
+                                className="form-control"
+                                value={formData?.area}
+                                onChange={handleAreaChange}
+                            >
+                                <option value="">Select a Area</option>
+                                {area.map((area) => (
+                                    <option key={area} value={area}>
+                                        {area}
+                                    </option>
+                                ))}
+                            </select>
+                            <span className="text-danger">{errors.areaError}</span>
+                        </div>
                     </div>
 
                     <div className="mb-3">
@@ -484,11 +586,6 @@ const Registration = () => {
                             {isEditing ? 'Update' : 'Submit'}</button>
                     </div>
                 </form>
-
-                {/* <div>
-                    <h2>Submitted Data</h2>
-                    <Table tableData={tableData} onDelete={handleDelete} onEdit={handleEdit}></Table>
-                </div> */}
             </div>
         </div>
     );
