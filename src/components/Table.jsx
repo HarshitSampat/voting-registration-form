@@ -16,8 +16,11 @@ const Table = () => {
     const [genderFiltervalue, setGenderFilterValue] = useState('')
     const [stateFilterValue, setStateFilterValue] = useState('')
     const [cityFilterValue, setCityFilterValue] = useState('')
+    const [searchFirstName, setSearchFirstName] = useState('')
+    const [sortingValue, setSortingValue] = useState('')
     const [hobbiesFilterVAlue, setHobbiesFilterValue] = useState([])
     const [TempSelectValue, setTempSelectValues] = useState([])
+    const [sortDropDownValues ,setSortDropDownValues] = useState([])
 
     const [ageFilterValue, setAgeFilterValue] = useState({
         min: 0,
@@ -32,11 +35,15 @@ const Table = () => {
         handleStateCityDropdown("states", states)
 
         getCities()
-        
+
         let userdata = localStorage.getItem("userData")
         if (userdata) {
             setUserData(JSON.parse(userdata))
-            setFilterData(JSON.parse(userdata))
+            let dropDownOptions = Object.keys(JSON.parse(userdata)[0])
+            console.log(dropDownOptions);
+            handleStateCityDropdown("sortDropDown",dropDownOptions)
+            
+            // setFilterData(JSON.parse(userdata))
         }
     }, []);
 
@@ -64,29 +71,29 @@ const Table = () => {
         navigate(`/edit/userdata/${index}`);
     }
 
-    const getCities = () =>{
+    const getCities = () => {
         let cities = []
         const cityData = Object.keys(statedata)
-        cityData.map((state,index)=>{
-            Object.keys(statedata[state]).map((city,index)=>{
+        cityData.map((state, index) => {
+            Object.keys(statedata[state]).map((city, index) => {
                 cities.push(city)
             })
         })
-        handleStateCityDropdown("Cities",cities.sort())
+        handleStateCityDropdown("Cities", cities.sort())
     }
 
     const handleFilter = (key, value) => {
         let filteredData = [];
         let userList = userData
-        
 
-        const checkvalue = checkCityIncludes(key,value)
+
+        const checkvalue = checkCityIncludes(key, value)
 
         let status = false
 
         if (checkvalue['GenderData']) {
             status = true
-            filteredData = userList.filter((data) => data.gender ===checkvalue['GenderData'])
+            filteredData = userList.filter((data) => data.gender === checkvalue['GenderData'])
         }
 
         // Apply state filter
@@ -115,21 +122,24 @@ const Table = () => {
     const handleStateCityDropdown = (key, values) => {
         let stateCityValues = []
         let setValues = {}
-        values.map((stateCity,index) => {
+        values.map((stateCity, index) => {
             setValues['value'] = stateCity;
             setValues['label'] = stateCity
             stateCityValues.push(setValues)
             setValues = {}
         })
-        key === 'states' ?  setStates(stateCityValues) : setCity(stateCityValues)
+        if(key === 'states') setStates(stateCityValues)
+        if(key === 'Cities') setCity(stateCityValues)
+        if( key === 'sortDropDown') setSortDropDownValues(stateCityValues)
+       
     }
 
-    const checkCityIncludes = (key,value) => {
+    const checkCityIncludes = (key, value) => {
 
         const genderData = key === 'Gedner' ? value : genderFiltervalue
         const stateData = key === 'State' ? value : stateFilterValue
         const cityData = key === 'City' ? value : cityFilterValue
-        
+
         let filterValues = {}
         const stateName = stateData?.value
         if (stateName) {
@@ -141,14 +151,14 @@ const Table = () => {
                 setGenderFilterValue(genderData)
                 setStateFilterValue(stateData)
                 setCityFilterValue(cityData)
-                
+
             } else {
                 setGenderFilterValue(genderData)
                 setStateFilterValue(stateData)
                 setCityFilterValue('')
             }
         } else {
-           getCities()
+            getCities()
             setGenderFilterValue(genderData)
             setStateFilterValue(stateData)
             setCityFilterValue(cityData)
@@ -160,13 +170,63 @@ const Table = () => {
         return filterValues
 
     }
+    const handleSearchWithFirstName = (e) => {
+        const value = e.target.value;
+        setSearchFirstName(value)
+
+        let serchFiltervalues = userData.filter(item => {
+            if (
+                item.firstName.toLowerCase().includes(value.toLowerCase()) ||
+                item.lastName.toLowerCase().includes(value.toLowerCase())
+            ) { return item }
+        })
+        setFilterData(serchFiltervalues)
+    }
+    const handleSorting = (e) => {
+        
+        let sortingValues = e.value
+        let sortedvalues = userData.sort((a,b)=>
+        {
+            // console.log(a);
+            // console.log(b);
+            `${a}.${sortingValues}`.localeCompare(`${b}.${sortingValue}`)
+            // a.sortingvalue.localeCompare(b.sortingvalue)
+        })
+        setSortingValue(e)
+        console.log(sortedvalues);
+        console.log("Funciton called");
+    }
 
     return (
         <div className="container">
             <Navbar />
-
             <div className="mt-4">
                 <div className="row">
+
+                    <div className="col-md-2">
+                        <label className="mb-1"></label>
+                        <input
+                            onChange={handleSearchWithFirstName}
+                            value={searchFirstName}
+                            className="form-control"
+                            placeholder="Search"
+                            type="search"
+                        />
+                    </div>
+
+                    <div className="col-md-2">
+                        <label className="mb-1"><strong>Sort By</strong></label>
+                        <Select
+                            defaultValue="SelectedOption"
+                            options={sortDropDownValues}
+                            value={sortingValue}
+                            isClearable
+                            isSearchable
+                            onChange={(e) => handleSorting(e)}
+
+                        ></Select>
+                    </div>
+
                     <div className="col-md-2">
                         <label htmlFor="filterGenderDropdown" className="mb-1">
                             <strong>Gender</strong></label>
@@ -220,7 +280,6 @@ const Table = () => {
                         />
                     </div>
 
-
                 </div>
 
             </div>
@@ -234,15 +293,17 @@ const Table = () => {
                         <th>Gender</th>
                         <th>Hobbies</th>
                         <th>Age</th>
-                        <th>Stat</th>
+                        <th>State</th>
                         <th>City</th>
                         <th>Area</th>
+                        <th>Salary</th>
                         <th>Edit</th>
                         <th>Delete</th>
+
                     </tr>
                 </thead>
                 <tbody>
-                    {filterData.sort((a, b) =>
+                    {userData.sort((a, b) =>
                         a.firstName.localeCompare(b.firstName)
                     ).map((data, index) => (
                         <tr key={`tr${index + 1}`}>
@@ -255,16 +316,17 @@ const Table = () => {
                             <td>{data.state}</td>
                             <td>{data.city}</td>
                             <td>{data.area}</td>
+                            <td>{data.salary}</td>
                             <td className="cursor-pointer">
                                 <div onClick={() => handleEdit(data, index)} className="">
-                                    <button id={index} className="btn btn-primary">
+                                    <button id={data.firstName+'-'+data.lastName+'-edit'} className="btn btn-primary">
                                         <i className="bi bi-pencil-square me-1"></i>
                                         Edit
                                     </button></div>
                             </td>
                             <td className="cursor-pointer">
                                 <div onClick={() => openDeleteModal(index)}>
-                                    <button id={index} className="btn btn-danger"><i className="bi bi-trash3 me-1"></i>Delete</button>
+                                    <button id={data.firstName+'-'+data.lastName+'-delete'} className="btn btn-danger"><i className="bi bi-trash3 me-1"></i>Delete</button>
                                 </div>
                             </td>
                         </tr>
@@ -301,6 +363,7 @@ const Table = () => {
                             <button
                                 type="button"
                                 className="btn btn-danger"
+                                id ='confirm'
                                 onClick={() => handleDelete(deleteIndex)}
                             >
                                 Confirm

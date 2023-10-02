@@ -31,8 +31,8 @@ const Registration = () => {
         statError: '',
         cityError: '',
         areaError: '',
-        dublicateErrormsg: '',
-        salaryErrorMsg : ''
+        duplicateErrormsg: '',
+        salaryErrorMsg: ''
     });
 
     const [tableData, setTableData] = useState([]);
@@ -41,7 +41,7 @@ const Registration = () => {
     const [area, setAreas] = useState([])
     const [isEditing, setIsEditing] = useState(false);
     const [editIndex, setEditIndex] = useState(-1);
-    const [dublicateErrorMsg, setDublicateErrorMsg] = useState('')
+    const [duplicateErrorMsg, setDuplicateErrorMsg] = useState('')
     useEffect(() => {
         let indianStates = indianState.filter(x => x.parentId === null)
         let stateNames = []
@@ -60,7 +60,6 @@ const Registration = () => {
             setIsEditing(true)
             setEditIndex(userId)
             handleCityDropDown(userdata[userId].state)
-
             handleAreaDropDown(userdata[userId].city)
         }
         else setFormData(formData)
@@ -168,6 +167,17 @@ const Registration = () => {
             newErrors.areaError = ''
         }
 
+        // Salary Validation 
+        if (formData.salary.length === 0) {
+            newErrors.salaryErrorMsg = 'Salary is required'
+            valid = false
+        } else if (formData.salary < 10000 || formData.salary > 500000) {
+            newErrors.salaryErrorMsg = 'Salary Shoul be between Rs 10000 to 500000'
+            valid = false
+        } else {
+            newErrors.salaryErrorMsg = ''
+        }
+
         setErrors(newErrors);
         return valid;
     };
@@ -192,23 +202,22 @@ const Registration = () => {
                 navigate('/userdata')
             }
             else {
-                const isDuplicate = checkDublicate()
+                const isDuplicate = checkDuplicate()
                 if (!isDuplicate) {
-                    setDublicateErrorMsg('')
+                    setDuplicateErrorMsg('')
                     const newRowData = { ...formData };
                     setTableData([...tableData, newRowData]);
                     setlocalStoreageData([...tableData, newRowData])
                     clearFormData()
                 } else {
-                    setDublicateErrorMsg('Dublicate data entries are not allowed')
+                    setDuplicateErrorMsg('Dublicate data entries are not allowed')
                 }
-
             }
 
         }
     };
 
-    const checkDublicate = () => {
+    const checkDuplicate = () => {
         let isDublicate = tableData.some((data) => {
             return (
                 data.firstName === formData.firstName &&
@@ -220,11 +229,11 @@ const Registration = () => {
             );
         });
         if (isDublicate) {
-            setDublicateErrorMsg('Dublicate data is not allowed')
+            setDuplicateErrorMsg('Dublicate data is not allowed')
             return true
         }
         else {
-            setDublicateErrorMsg('')
+            setDuplicateErrorMsg('')
             return false
         }
     }
@@ -274,7 +283,6 @@ const Registration = () => {
     const handleCityChange = (e) => {
         const selectedCity = e.target.value;
 
-
         // Update the form data and clear the city error message
         setFormData({ ...formData, city: selectedCity });
         setErrors({ ...errors, cityError: '' });
@@ -302,7 +310,8 @@ const Registration = () => {
             age: null,
             state: '',
             city: '',
-            area: ''
+            area: '',
+            salary: ''
         });
     }
 
@@ -310,7 +319,6 @@ const Registration = () => {
         let getCityId = getSelectedCityId(selectedCity)
         let areaValues = indianState.filter(x => x.parentId === getCityId)
         let setAreavalues = DropdownValues(areaValues)
-        console.log(setAreavalues);
         setAreas(setAreavalues)
     }
 
@@ -584,8 +592,8 @@ const Registration = () => {
 
 
                     <div className='row'>
-                    <div className='col-6'>
-                            <label htmlFor="age" className="form-label">Salary</label>
+                        <div className='col-6'>
+                            <label htmlFor="salary" className="form-label">Salary</label>
                             <input
                                 type="number"
                                 className="form-control"
@@ -595,14 +603,14 @@ const Registration = () => {
                                 onChange={handleInputChange}
                                 onBlur={validateForm}
                             />
-                            <span className="text-danger">{errors.ageError}</span>
+                            <span className="text-danger">{errors.salaryErrorMsg}</span>
                         </div>
                     </div>
 
                     <div className="mb-3 mt-4">
-                        <div className='text-danger'><strong>{dublicateErrorMsg}</strong></div>
-                        <button type="button" className="btn btn-primary" id='submit' onClick={handleFormSubmit}>
-                            {isEditing ? 'Update' : 'Submit'}</button>
+                        <div className='text-danger'><strong>{duplicateErrorMsg}</strong></div>
+                        <button type="button" className="btn btn-primary" id={isEditing ? 'Update' : 'Submit'} onClick={handleFormSubmit}>
+                            {isEditing ? 'update' : 'submit'}</button>
                     </div>
                 </form>
             </div>
