@@ -210,6 +210,7 @@ const Table = () => {
                             value={searchFirstName}
                             className="form-control"
                             placeholder="Search"
+                            id ="search"
                             type="search"
                         />
                     </div>
