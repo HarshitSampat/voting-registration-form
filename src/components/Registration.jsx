@@ -9,6 +9,7 @@ const Registration = () => {
     const userId = routerParams['index']
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
+        userId: null,
         firstName: '',
         lastName: '',
         dateOfBirth: '',
@@ -41,7 +42,7 @@ const Registration = () => {
     const [cities, setCities] = useState([]);
     const [area, setAreas] = useState([])
     const [isEditing, setIsEditing] = useState(false);
-    const [editIndex, setEditIndex] = useState(-1);
+    // const [editIndex, setEditIndex] = useState(-1);
     const [duplicateErrorMsg, setDuplicateErrorMsg] = useState('')
     useEffect(() => {
         let indianStates = indianState.filter(x => x.parentId === null)
@@ -55,15 +56,16 @@ const Registration = () => {
 
         let userdata = localStorage.getItem("userData")
         if (userdata) setTableData(JSON.parse(userdata))
-        userdata = JSON.parse(userdata)
+        // userdata = JSON.parse(userdata)
         if (url.split('/').includes('edit')) {
-            setFormData(userdata[userId])
+            let singleUser = JSON.parse(userdata).find(item => item.userId === parseInt(userId));
+            setFormData(singleUser)
             setIsEditing(true)
-            setEditIndex(userId)
-            handleCityDropDown(userdata[userId].state)
-            handleAreaDropDown(userdata[userId].city)
+            // setEditIndex(userId)
+            handleCityDropDown(singleUser.state)
+            handleAreaDropDown(singleUser.city)
         }
-        else setFormData(formData)
+        else clearFormData();
     }, []);
 
     const validateForm = () => {
@@ -193,12 +195,16 @@ const Registration = () => {
         if (validateForm()) {
             if (isEditing) {
                 const updatedTableData = [...tableData];
-                updatedTableData[editIndex] = { ...formData };
                 setTableData(updatedTableData);
-                // Reset form and state after update
+                localStorage.getItem("userData")
+                const editedUserIndex = updatedTableData.findIndex(item => item.userId === parseInt(userId));
+
+                if (editedUserIndex !== -1)
+                    updatedTableData[editedUserIndex] = { ...formData };
+
                 setlocalStoreageData(updatedTableData)
                 setIsEditing(false);
-                setEditIndex(-1);
+                // setEditIndex(-1);
                 clearFormData()
                 navigate('/userdata')
             }
@@ -206,10 +212,14 @@ const Registration = () => {
                 const isDuplicate = checkDuplicate()
                 if (!isDuplicate) {
                     setDuplicateErrorMsg('')
+                    const random4DigitNumber = Math.floor(Math.random() * 9000) + 1000;
+
+                    formData.userId = random4DigitNumber
                     const newRowData = { ...formData };
                     setTableData([...tableData, newRowData]);
                     setlocalStoreageData([...tableData, newRowData])
                     clearFormData()
+                    navigate('/userdata')
                 } else {
                     setDuplicateErrorMsg('Dublicate data entries are not allowed')
                 }
@@ -609,8 +619,8 @@ const Registration = () => {
 
                     <div className="mb-3 mt-4">
                         <div className='text-danger'><strong>{duplicateErrorMsg}</strong></div>
-                        {submitDisable  ?<button type="button" className="btn btn-primary" id={isEditing ? 'update' : 'submit'} onClick={handleFormSubmit}>
-                            {isEditing ? 'Update' : 'Submit'}</button>:<button type="button" disabled className="btn btn-primary" id={isEditing ? 'update' : 'submit'} onClick={handleFormSubmit}>
+                        {submitDisable ? <button type="button" className="btn btn-primary" id={isEditing ? 'update' : 'submit'} onClick={handleFormSubmit}>
+                            {isEditing ? 'Update' : 'Submit'}</button> : <button type="button" disabled className="btn btn-primary" id={isEditing ? 'update' : 'submit'} onClick={handleFormSubmit}>
                             {isEditing ? 'Update' : 'Submit'}</button>}
                     </div>
                 </form>
