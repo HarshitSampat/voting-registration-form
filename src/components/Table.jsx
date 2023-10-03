@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
-import statedata from '../assets/indianStateCityAreaCode.json'
+import indianStates from '../assets/indianStateandAreawithcode.json'
 import Select from 'react-select'
 
 const Table = () => {
@@ -18,32 +18,40 @@ const Table = () => {
     const [cityFilterValue, setCityFilterValue] = useState('')
     const [searchFirstName, setSearchFirstName] = useState('')
     const [sortingValue, setSortingValue] = useState('')
-    const [hobbiesFilterVAlue, setHobbiesFilterValue] = useState([])
+    const [hobbiesFilterValue, setHobbiesFilterValue] = useState([])
     const [TempSelectValue, setTempSelectValues] = useState([])
-    const [sortDropDownValues ,setSortDropDownValues] = useState([])
+    const [sortDropDownValues, setSortDropDownValues] = useState([])
+    const [ageFilterminValue, setAgeFilterMinValue] = useState(0);
+    const [ageFilteMaxValue, setAgeFilterMaaxValue] = useState(0)
+    const [sortingFirstName, setSortingFirstName] = useState(false)
+    const [sortingLastName, setSortingLastName] = useState(false)
+    const [sortingdate, setSortingDate] = useState(false)
+    const [sortingAge, setSortingAge] = useState(false)
+    const [sortingState, setSortingState] = useState(false)
+    const [sortingCity, setSortingCity] = useState(false)
+    const [sortingArea, setSortingArea] = useState(false)
+    const [sortingSalary, setSortingSalary] = useState(false)
 
-    const [ageFilterValue, setAgeFilterValue] = useState({
-        min: 0,
-        max: 0
-    })
+    const [ageFilterValue, setAgeFilterValue] = useState(0)
     const gender = ['Male', 'Female']
 
     useEffect(() => {
-        const states = Object.keys(statedata)
+        let indianState = indianStates.filter(x => x.parentId === null)
+        let states = []
+        if (indianStates)
+            indianState.forEach(element => {
+                states.push(element.name)
+            });
 
         states.sort()
         handleStateCityDropdown("states", states)
-
-        getCities()
 
         let userdata = localStorage.getItem("userData")
         if (userdata) {
             setUserData(JSON.parse(userdata))
             let dropDownOptions = Object.keys(JSON.parse(userdata)[0])
-            console.log(dropDownOptions);
-            handleStateCityDropdown("sortDropDown",dropDownOptions)
-            
-            // setFilterData(JSON.parse(userdata))
+            handleStateCityDropdown("sortDropDown", dropDownOptions)
+            setFilterData(JSON.parse(userdata))
         }
     }, []);
 
@@ -71,79 +79,37 @@ const Table = () => {
         navigate(`/edit/userdata/${index}`);
     }
 
-    const getCities = () => {
+    const getCities = (statedatavalues) => {
         let cities = []
-        const cityData = Object.keys(statedata)
-        cityData.map((state, index) => {
-            Object.keys(statedata[state]).map((city, index) => {
-                cities.push(city)
+        let stateData = {}
+        let cityData = []
+        if (statedatavalues) {
+            stateData = indianStates.find((state) => state.name === statedatavalues)
+        }
+        if (stateData.ID) {
+            cityData = indianStates.filter((city) => city.parentId === stateData.ID)
+        }
+
+        if (cityData.length > 0) {
+            cityData.forEach(x => {
+                cities.push(x.name)
             })
-        })
+        }
+
         handleStateCityDropdown("Cities", cities.sort())
+        return cities
     }
 
     const handleFilter = (key, value) => {
-        let filteredData = [];
-        let userList = userData
-
-
-        const checkvalue = checkCityIncludes(key, value)
-
-        let status = false
-
-        if (checkvalue['GenderData']) {
-            status = true
-            filteredData = userList.filter((data) => data.gender === checkvalue['GenderData'])
-        }
-
-        // Apply state filter
-        if (checkvalue['StateData']?.value) {
-            status = true
-            filteredData = (filteredData?.length > 0 ? filteredData : userList).filter((data) => data.state === checkvalue['StateData']?.value)
-        }
-        if (checkvalue['cityData']?.value) {
-            status = true
-            filteredData = (filteredData?.length > 0 ? filteredData : userList).filter((data) => data.city === checkvalue['cityData']?.value)
-        }
-
-
-        // Age range filter
-        // if (ageFilterValue.min !== '' && ageFilterValue.max !== '') {
-        //     filteredData = filteredData.filter(x => x.age >= ageFilterValue.min && x.age <= ageFilterValue.max);
-        // }
-
-        // // Hobbies filter
-        // if (hobbiesFilterValue !== '') {
-        //     filteredData = filteredData.filter(x => x.hobbies.includes(hobbiesFilterValue));
-        // }
-        // console.log("line 110", filteredData);
-        setFilterData(status ? filteredData : userList);
-    }
-    const handleStateCityDropdown = (key, values) => {
-        let stateCityValues = []
-        let setValues = {}
-        values.map((stateCity, index) => {
-            setValues['value'] = stateCity;
-            setValues['label'] = stateCity
-            stateCityValues.push(setValues)
-            setValues = {}
-        })
-        if(key === 'states') setStates(stateCityValues)
-        if(key === 'Cities') setCity(stateCityValues)
-        if( key === 'sortDropDown') setSortDropDownValues(stateCityValues)
-       
-    }
-
-    const checkCityIncludes = (key, value) => {
-
         const genderData = key === 'Gedner' ? value : genderFiltervalue
         const stateData = key === 'State' ? value : stateFilterValue
         const cityData = key === 'City' ? value : cityFilterValue
 
-        let filterValues = {}
         const stateName = stateData?.value
+        let values = getCities(stateName)
+
         if (stateName) {
-            let cities = Object.keys(statedata[stateName])
+            let cities = getCities(stateName)
             setCity(cities.map((city) => {
                 return { label: city, value: city }
             }))
@@ -158,43 +124,81 @@ const Table = () => {
                 setCityFilterValue('')
             }
         } else {
-            getCities()
+            getCities(stateName)
             setGenderFilterValue(genderData)
             setStateFilterValue(stateData)
             setCityFilterValue(cityData)
-
         }
-        filterValues['GenderData'] = genderData
-        filterValues['StateData'] = stateData
-        filterValues['cityData'] = cityData
-        return filterValues
 
     }
+    const handleStateCityDropdown = (key, values) => {
+        let stateCityValues = []
+        let setValues = {}
+        values.map((stateCity, index) => {
+            setValues['value'] = stateCity;
+            setValues['label'] = stateCity
+            stateCityValues.push(setValues)
+            setValues = {}
+        })
+        if (key === 'states') setStates(stateCityValues)
+        if (key === 'Cities') setCity(stateCityValues)
+        if (key === 'sortDropDown') setSortDropDownValues(stateCityValues)
+
+    }
+
     const handleSearchWithFirstName = (e) => {
         const value = e.target.value;
         setSearchFirstName(value)
 
-        let serchFiltervalues = userData.filter(item => {
-            if (
-                item.firstName.toLowerCase().includes(value.toLowerCase()) ||
-                item.lastName.toLowerCase().includes(value.toLowerCase())
-            ) { return item }
+        let serchFiltervalues = filterData.filter(item => {
+            for (let e in item) {
+                if (item[e].toString().toLowerCase().includes(value.toLowerCase())) return item;
+            }
         })
         setFilterData(serchFiltervalues)
     }
-    const handleSorting = (e) => {
-        
-        let sortingValues = e.value
-        let sortedvalues = userData.sort((a,b)=>
-        {
-            // console.log(a);
-            // console.log(b);
-            `${a}.${sortingValues}`.localeCompare(`${b}.${sortingValue}`)
-            // a.sortingvalue.localeCompare(b.sortingvalue)
-        })
-        setSortingValue(e)
-        console.log(sortedvalues);
-        console.log("Funciton called");
+
+    const handleFilterData = () => {
+        let filterData = userData
+        if (genderFiltervalue) {
+            filterData = filterData.filter(x => x.gender === genderFiltervalue)
+        }
+
+        if (stateFilterValue) {
+            filterData = filterData.filter(x => x.state === stateFilterValue.value)
+        }
+
+        if (cityFilterValue) {
+            filterData = filterData.filter(x => x.city === cityFilterValue.value)
+        }
+
+        if (ageFilterValue >= 0) {
+            filterData = filterData.filter(x => x.age <= ageFilterValue)
+        }
+        setFilterData(filterData)
+    }
+
+    const handleFirstNameSorting = (filterOrder, field) => {
+        const isAscending = filterOrder === 'asc';
+        if (field === 'age' || field === 'salary') {
+
+            let sortedValues = [...filterData].sort((a, b) => {
+                if (isAscending)
+                    return a[field] - b[field]
+                else
+                    return b[field] - a[field];
+            });
+            setFilterData([...sortedValues]);
+        }
+        else {
+            let sortedValues = [...filterData].sort((a, b) => {
+                if (isAscending)
+                    return a[field].localeCompare(b[field])
+                else
+                    return b[field].localeCompare(a[field]);
+            });
+            setFilterData([...sortedValues]);
+        }
     }
 
     return (
@@ -210,29 +214,16 @@ const Table = () => {
                             value={searchFirstName}
                             className="form-control"
                             placeholder="Search"
-                            id ="search"
+                            id="search"
                             type="search"
                         />
-                    </div>
-
-                    <div className="col-md-2">
-                        <label className="mb-1"><strong>Sort By</strong></label>
-                        <Select
-                            defaultValue="SelectedOption"
-                            options={sortDropDownValues}
-                            value={sortingValue}
-                            isClearable
-                            isSearchable
-                            onChange={(e) => handleSorting(e)}
-
-                        ></Select>
                     </div>
 
                     <div className="col-md-2">
                         <label htmlFor="filterGenderDropdown" className="mb-1">
                             <strong>Gender</strong></label>
                         <select
-                            id="filterGenderDropdown"
+                            id="filter-gender"
                             className="form-control p-2 rounded"
                             onChange={(e) => {
                                 handleFilter('Gedner', e.target.value)
@@ -255,6 +246,7 @@ const Table = () => {
                             <label className="mb-1"><strong>State</strong></label>
                         </div>
                         <Select
+                            id="filter-state"
                             defaultValue="SelectedOption"
                             options={state}
                             value={stateFilterValue || ''}
@@ -272,6 +264,7 @@ const Table = () => {
                         </label>
 
                         <Select
+                            id="filter-city"
                             defaultValue="Select Option"
                             options={city}
                             isClearable={true}
@@ -281,6 +274,21 @@ const Table = () => {
                         />
                     </div>
 
+                    {/* range Filter */}
+                    <div className="col-md-2">
+                        <label htmlFor="city" className="mb-1">
+                            <strong>Age</strong>
+                        </label>
+                        <div>
+                            <input type="range" value={ageFilterValue} onInput={(e) => setAgeFilterValue(e.target.value)} />
+                            {ageFilterValue}
+                        </div>
+                    </div>
+
+                    {/* filter Button */}
+                    <div className="col-md-2">
+                        <button className="btn btn-secondary mt-4" id="filter" onClick={handleFilterData}>Filter</button>
+                    </div>
                 </div>
 
             </div>
@@ -288,25 +296,120 @@ const Table = () => {
             <table className="table mt-3">
                 <thead>
                     <tr>
-                        <th>First Name</th>
-                        <th>Last Name</th>
-                        <th>Date of Birth</th>
+                        <th>First Name
+
+                            {sortingFirstName ? (
+                                <i className="bi bi-arrow-down" onClick={(e) => {
+                                    handleFirstNameSorting("asc", "firstName")
+                                    setSortingFirstName(!sortingFirstName);
+                                }}></i>
+                            ) : (
+                                <i className="bi bi-arrow-up" onClick={(e) => {
+                                    handleFirstNameSorting("desc", "firstName")
+                                    setSortingFirstName(!sortingFirstName);
+                                }}></i>
+                            )}
+                        </th>
+                        <th>Last Name
+                            {sortingLastName ? (
+                                <i className="bi bi-arrow-down" onClick={(e) => {
+                                    handleFirstNameSorting("asc", "lastName")
+                                    setSortingLastName(!sortingLastName);
+                                }}></i>
+                            ) : (
+                                <i className="bi bi-arrow-up" onClick={(e) => {
+                                    handleFirstNameSorting("desc", "lastName")
+                                    setSortingLastName(!sortingLastName);
+                                }}></i>
+                            )}
+                        </th>
+                        <th>Date of Birth
+                            {sortingdate ? (
+                                <i className="bi bi-arrow-down" onClick={(e) => {
+                                    handleFirstNameSorting("asc", "dateOfBirth")
+                                    setSortingDate(!sortingdate);
+                                }}></i>
+                            ) : (
+                                <i className="bi bi-arrow-up" onClick={(e) => {
+                                    handleFirstNameSorting("desc", "dateOfBirth")
+                                    setSortingDate(!sortingdate);
+                                }}></i>
+                            )}
+                        </th>
                         <th>Gender</th>
                         <th>Hobbies</th>
-                        <th>Age</th>
-                        <th>State</th>
-                        <th>City</th>
-                        <th>Area</th>
-                        <th>Salary</th>
+                        <th>Age
+                            {sortingAge ? (
+                                <i className="bi bi-arrow-down" onClick={(e) => {
+                                    handleFirstNameSorting("asc", "age")
+                                    setSortingAge(!sortingAge);
+                                }}></i>
+                            ) : (
+                                <i className="bi bi-arrow-up" onClick={(e) => {
+                                    handleFirstNameSorting("desc", "age")
+                                    setSortingAge(!sortingAge);
+                                }}></i>
+                            )}
+                        </th>
+                        <th>State
+                            {sortingState ? (
+                                <i className="bi bi-arrow-down" onClick={(e) => {
+                                    handleFirstNameSorting("asc", "state")
+                                    setSortingState(!sortingState);
+                                }}></i>
+                            ) : (
+                                <i className="bi bi-arrow-up" onClick={(e) => {
+                                    handleFirstNameSorting("desc", "state")
+                                    setSortingState(!sortingState);
+                                }}></i>
+                            )}
+                        </th>
+                        <th>City
+                            {sortingCity ? (
+                                <i className="bi bi-arrow-down" onClick={(e) => {
+                                    handleFirstNameSorting("asc", "city")
+                                    setSortingCity(!sortingCity);
+                                }}></i>
+                            ) : (
+                                <i className="bi bi-arrow-up" onClick={(e) => {
+                                    handleFirstNameSorting("desc", "city")
+                                    setSortingCity(!sortingCity);
+                                }}></i>
+                            )}
+                        </th>
+                        <th>Area
+                            {sortingArea ? (
+                                <i className="bi bi-arrow-down" onClick={(e) => {
+                                    handleFirstNameSorting("asc", "area")
+                                    setSortingArea(!sortingArea);
+                                }}></i>
+                            ) : (
+                                <i className="bi bi-arrow-up" onClick={(e) => {
+                                    handleFirstNameSorting("desc", "area")
+                                    setSortingArea(!sortingArea);
+                                }}></i>
+                            )}
+                        </th>
+                        <th>Salary
+                            {sortingSalary ? (
+                                <i className="bi bi-arrow-down" onClick={(e) => {
+                                    handleFirstNameSorting("asc", "salary")
+                                    setSortingSalary(!sortingSalary);
+                                }}></i>
+                            ) : (
+                                <i className="bi bi-arrow-up" onClick={(e) => {
+                                    handleFirstNameSorting("desc", "salary")
+                                    setSortingSalary(!sortingSalary);
+                                }}></i>
+                            )}
+                        </th>
                         <th>Edit</th>
                         <th>Delete</th>
 
                     </tr>
                 </thead>
                 <tbody>
-                    {userData.sort((a, b) =>
-                        a.firstName.localeCompare(b.firstName)
-                    ).map((data, index) => (
+                    {filterData.map((data, index) => (
                         <tr key={`tr${index + 1}`}>
                             <td>{data.firstName}</td>
                             <td>{data.lastName}</td>
@@ -320,14 +423,14 @@ const Table = () => {
                             <td>{data.salary}</td>
                             <td className="cursor-pointer">
                                 <div onClick={() => handleEdit(data, index)} className="">
-                                    <button id={data.firstName+'-'+data.lastName+'-edit'} className="btn btn-primary">
+                                    <button id={data.firstName + '-' + data.lastName + '-edit'} className="btn btn-primary">
                                         <i className="bi bi-pencil-square me-1"></i>
                                         Edit
                                     </button></div>
                             </td>
                             <td className="cursor-pointer">
                                 <div onClick={() => openDeleteModal(index)}>
-                                    <button id={data.firstName+'-'+data.lastName+'-delete'} className="btn btn-danger"><i className="bi bi-trash3 me-1"></i>Delete</button>
+                                    <button id={data.firstName + '-' + data.lastName + '-delete'} className="btn btn-danger"><i className="bi bi-trash3 me-1"></i>Delete</button>
                                 </div>
                             </td>
                         </tr>
@@ -358,13 +461,14 @@ const Table = () => {
                                 type="button"
                                 className="btn btn-secondary"
                                 onClick={closeDeleteModal}
+                                id="cancel"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="button"
                                 className="btn btn-danger"
-                                id ='confirm'
+                                id='confirm'
                                 onClick={() => handleDelete(deleteIndex)}
                             >
                                 Confirm

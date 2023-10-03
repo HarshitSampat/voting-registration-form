@@ -35,6 +35,7 @@ const Registration = () => {
         salaryErrorMsg: ''
     });
 
+    const [submitDisable, setSubmitDisable] = useState(true);
     const [tableData, setTableData] = useState([]);
     const [states, setStates] = useState([]);
     const [cities, setCities] = useState([]);
@@ -64,7 +65,6 @@ const Registration = () => {
         }
         else setFormData(formData)
     }, []);
-
 
     const validateForm = () => {
         let valid = true;
@@ -179,6 +179,7 @@ const Registration = () => {
         }
 
         setErrors(newErrors);
+        setSubmitDisable(valid)
         return valid;
     };
 
@@ -348,7 +349,6 @@ const Registration = () => {
         });
         return cityState
     }
-
     return (
         <div className='container'>
             <Navbar />
@@ -609,8 +609,9 @@ const Registration = () => {
 
                     <div className="mb-3 mt-4">
                         <div className='text-danger'><strong>{duplicateErrorMsg}</strong></div>
-                        <button type="button" className="btn btn-primary" id={isEditing ? 'Update' : 'Submit'} onClick={handleFormSubmit}>
-                            {isEditing ? 'update' : 'submit'}</button>
+                        {submitDisable  ?<button type="button" className="btn btn-primary" id={isEditing ? 'update' : 'submit'} onClick={handleFormSubmit}>
+                            {isEditing ? 'Update' : 'Submit'}</button>:<button type="button" disabled className="btn btn-primary" id={isEditing ? 'update' : 'submit'} onClick={handleFormSubmit}>
+                            {isEditing ? 'Update' : 'Submit'}</button>}
                     </div>
                 </form>
             </div>
