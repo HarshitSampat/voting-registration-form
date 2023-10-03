@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import indianStates from '../assets/indianStateandAreawithcode.json'
 import Select from 'react-select'
+import { filter } from "lodash";
 
 const Table = () => {
     const navigate = useNavigate()
@@ -13,16 +14,18 @@ const Table = () => {
     const [filterData, setFilterData] = useState([])
     const [state, setStates] = useState([])
     const [city, setCity] = useState([])
+    const [area,setArea] = useState([])
     const [genderFiltervalue, setGenderFilterValue] = useState('')
     const [stateFilterValue, setStateFilterValue] = useState('')
     const [cityFilterValue, setCityFilterValue] = useState('')
+    const [areaFilterValue,setAreaFilterValue] = useState('')
     const [searchFirstName, setSearchFirstName] = useState('')
     const [sortingValue, setSortingValue] = useState('')
     const [hobbiesFilterValue, setHobbiesFilterValue] = useState([])
     const [TempSelectValue, setTempSelectValues] = useState([])
-    const [sortDropDownValues, setSortDropDownValues] = useState([])
+    // const [sortDropDownValues, setSortDropDownValues] = useState([])
     const [ageFilterminValue, setAgeFilterMinValue] = useState(0);
-    const [ageFilteMaxValue, setAgeFilterMaaxValue] = useState(0)
+    const [ageFilteMaxValue, setAgeFilterMaxValue] = useState(0)
     const [sortingFirstName, setSortingFirstName] = useState(false)
     const [sortingLastName, setSortingLastName] = useState(false)
     const [sortingdate, setSortingDate] = useState(false)
@@ -120,30 +123,43 @@ const Table = () => {
         const genderData = key === 'Gedner' ? value : genderFiltervalue
         const stateData = key === 'State' ? value : stateFilterValue
         const cityData = key === 'City' ? value : cityFilterValue
+        const areaData = key === 'Area'? value : areaFilterValue
 
         const stateName = stateData?.value
-        let values = getCities(stateName)
+
+        const cityName = cityData?.value
+        let areaValues= []
+        if(stateName && cityName) {
+          areaValues =   getAreas(stateName,cityName)
+        }
 
         if (stateName) {
             let cities = getCities(stateName)
-            setCity(cities.map((city) => {
-                return { label: city, value: city }
-            }))
+            //
             if (cities.includes(cityData?.value)) {
                 setGenderFilterValue(genderData)
                 setStateFilterValue(stateData)
                 setCityFilterValue(cityData)
+                
+                if(areaValues.includes(areaData?.value)){
+                    setAreaFilterValue(areaData)
+                }
+                else{
+                    setAreaFilterValue('')
+                }
 
             } else {
                 setGenderFilterValue(genderData)
                 setStateFilterValue(stateData)
                 setCityFilterValue('')
+                setAreaFilterValue('')
             }
         } else {
             getCities(stateName)
             setGenderFilterValue(genderData)
             setStateFilterValue(stateData)
             setCityFilterValue(cityData)
+            setAreaFilterValue('')
         }
 
     }
@@ -158,20 +174,25 @@ const Table = () => {
         })
         if (key === 'states') setStates(stateCityValues)
         if (key === 'Cities') setCity(stateCityValues)
-        if (key === 'sortDropDown') setSortDropDownValues(stateCityValues)
+        if (key==='Areas') setArea(stateCityValues)
 
     }
 
-    const handleSearchWithFirstName = (e) => {
+    const handleSearch = (e) => {
         const value = e.target.value;
         setSearchFirstName(value)
 
-        let serchFiltervalues = filterData.filter(item => {
-            for (let e in item) {
-                if (item[e].toString().toLowerCase().includes(value.toLowerCase())) return item;
-            }
-        })
-        setFilterData(serchFiltervalues)
+        if (value) {
+            let serchFiltervalues = filterData.filter(item => {
+                for (let e in item) {
+                    if (item[e].toString().toLowerCase().includes(value.toLowerCase())) return item;
+                }
+            })
+            setFilterData(serchFiltervalues)
+        } else {
+            setFilterData(userData)
+        }
+
     }
 
     const handleFilterData = () => {
@@ -188,13 +209,18 @@ const Table = () => {
             filterData = filterData.filter(x => x.city === cityFilterValue.value)
         }
 
-        if (ageFilterValue >= 0) {
-            filterData = filterData.filter(x => x.age <= ageFilterValue)
+        if (ageFilteMaxValue === 0) setAgeFilterMaxValue(120)
+        if (ageFilterminValue && ageFilteMaxValue) {
+            filterData = filterData.filter(x => (x.age <= ageFilteMaxValue && x.age >= ageFilterminValue))
+        }
+
+        if(areaFilterValue){
+            filterData = filterData.filter(x=>x.area === areaFilterValue.value)
         }
         setFilterData(filterData)
     }
 
-    const handleFirstNameSorting = (filterOrder, field) => {
+    const handleSorting = (filterOrder, field) => {
         const isAscending = filterOrder === 'asc';
         if (field === 'age' || field === 'salary') {
 
@@ -240,6 +266,22 @@ const Table = () => {
     };
 
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+    const getAreas = (stateName,cityName)=>{
+      let cityData =   indianStates.find(x=>x.name === cityName)
+      
+      let parentId = cityData.ID
+      let getArea =  indianStates.filter(x => x.parentId === parentId)
+    
+      let areaValues = []
+      getArea.forEach(x => {
+        areaValues.push(x.name)
+      })
+
+      handleStateCityDropdown("Areas",areaValues)
+      return areaValues
+    }
+
     return (
         <div className="container">
             <Navbar />
@@ -249,7 +291,7 @@ const Table = () => {
                     <div className="col-md-2">
                         <label className="mb-1"></label>
                         <input
-                            onChange={handleSearchWithFirstName}
+                            onChange={handleSearch}
                             value={searchFirstName}
                             className="form-control"
                             placeholder="Search"
@@ -313,21 +355,62 @@ const Table = () => {
                         />
                     </div>
 
-                    {/* range Filter */}
                     <div className="col-md-2">
-                        <label htmlFor="city" className="mb-1">
+                        <label htmlFor="area" className="mb-1">
+                            <strong>Area</strong>
+                        </label>
+
+                        <Select
+                            id="filter-area"
+                            defaultValue="Select Option"
+                            options={area}
+                            isClearable={true}
+                            value={areaFilterValue || ''}
+                            onChange={(e) => handleFilter("Area", e)}
+
+                        />
+                    </div>
+
+
+                    {/* <label htmlFor="city" className="mb-1">
                             <strong>Age</strong>
                         </label>
                         <div>
                             <input type="range" value={ageFilterValue} onInput={(e) => setAgeFilterValue(e.target.value)} />
                             {ageFilterValue}
-                        </div>
-                    </div>
+                        </div> */}
+
 
 
                 </div>
+
+
+                <div className="row mt-3">
+                    <div className="col-md-2">
+                        <label htmlFor="minFilterage">Min Age</label>
+                        <input
+                            id="filter-minAge"
+                            className="form-control"
+                            value={ageFilterminValue}
+                            type="number"
+                            onChange={(e) => setAgeFilterMinValue(e.target.value)}
+                        />
+                    </div>
+                    <div className="col-md-2">
+                        <label htmlFor="maxFilterage">Max Age</label>
+
+                        <input type="number"
+                            id="filter-maxAge"
+                            className="form-control"
+                            value={ageFilteMaxValue}
+                            onChange={(e) => setAgeFilterMaxValue(e.target.value)}
+                        />
+                    </div>
+
+                </div>
+
                 {/* filter Button */}
-                <div className="colmd">
+                <div className="col">
                     <button className="btn btn-secondary mt-4" id="filter" onClick={handleFilterData}><i className="bi bi-filter"></i>Filter</button>
                     <button className="btn btn-success mt-4 ms-2" id="filter" onClick={resetFilter}><i className="bi bi-bootstrap-reboot me-2"></i>Reset Filter</button>
                 </div>
@@ -341,12 +424,12 @@ const Table = () => {
 
                             {sortingFirstName ? (
                                 <i className="bi bi-arrow-down" onClick={(e) => {
-                                    handleFirstNameSorting("asc", "firstName")
+                                    handleSorting("asc", "firstName")
                                     setSortingFirstName(!sortingFirstName);
                                 }}></i>
                             ) : (
                                 <i className="bi bi-arrow-up" onClick={(e) => {
-                                    handleFirstNameSorting("desc", "firstName")
+                                    handleSorting("desc", "firstName")
                                     setSortingFirstName(!sortingFirstName);
                                 }}></i>
                             )}
@@ -354,12 +437,12 @@ const Table = () => {
                         <th>Last Name
                             {sortingLastName ? (
                                 <i className="bi bi-arrow-down" onClick={(e) => {
-                                    handleFirstNameSorting("asc", "lastName")
+                                    handleSorting("asc", "lastName")
                                     setSortingLastName(!sortingLastName);
                                 }}></i>
                             ) : (
                                 <i className="bi bi-arrow-up" onClick={(e) => {
-                                    handleFirstNameSorting("desc", "lastName")
+                                    handleSorting("desc", "lastName")
                                     setSortingLastName(!sortingLastName);
                                 }}></i>
                             )}
@@ -367,12 +450,12 @@ const Table = () => {
                         <th>Date of Birth
                             {sortingdate ? (
                                 <i className="bi bi-arrow-down" onClick={(e) => {
-                                    handleFirstNameSorting("asc", "dateOfBirth")
+                                    handleSorting("asc", "dateOfBirth")
                                     setSortingDate(!sortingdate);
                                 }}></i>
                             ) : (
                                 <i className="bi bi-arrow-up" onClick={(e) => {
-                                    handleFirstNameSorting("desc", "dateOfBirth")
+                                    handleSorting("desc", "dateOfBirth")
                                     setSortingDate(!sortingdate);
                                 }}></i>
                             )}
@@ -382,12 +465,12 @@ const Table = () => {
                         <th>Age
                             {sortingAge ? (
                                 <i className="bi bi-arrow-down" onClick={(e) => {
-                                    handleFirstNameSorting("asc", "age")
+                                    handleSorting("asc", "age")
                                     setSortingAge(!sortingAge);
                                 }}></i>
                             ) : (
                                 <i className="bi bi-arrow-up" onClick={(e) => {
-                                    handleFirstNameSorting("desc", "age")
+                                    handleSorting("desc", "age")
                                     setSortingAge(!sortingAge);
                                 }}></i>
                             )}
@@ -395,12 +478,12 @@ const Table = () => {
                         <th>State
                             {sortingState ? (
                                 <i className="bi bi-arrow-down" onClick={(e) => {
-                                    handleFirstNameSorting("asc", "state")
+                                    handleSorting("asc", "state")
                                     setSortingState(!sortingState);
                                 }}></i>
                             ) : (
                                 <i className="bi bi-arrow-up" onClick={(e) => {
-                                    handleFirstNameSorting("desc", "state")
+                                    handleSorting("desc", "state")
                                     setSortingState(!sortingState);
                                 }}></i>
                             )}
@@ -408,12 +491,12 @@ const Table = () => {
                         <th>City
                             {sortingCity ? (
                                 <i className="bi bi-arrow-down" onClick={(e) => {
-                                    handleFirstNameSorting("asc", "city")
+                                    handleSorting("asc", "city")
                                     setSortingCity(!sortingCity);
                                 }}></i>
                             ) : (
                                 <i className="bi bi-arrow-up" onClick={(e) => {
-                                    handleFirstNameSorting("desc", "city")
+                                    handleSorting("desc", "city")
                                     setSortingCity(!sortingCity);
                                 }}></i>
                             )}
@@ -421,12 +504,12 @@ const Table = () => {
                         <th>Area
                             {sortingArea ? (
                                 <i className="bi bi-arrow-down" onClick={(e) => {
-                                    handleFirstNameSorting("asc", "area")
+                                    handleSorting("asc", "area")
                                     setSortingArea(!sortingArea);
                                 }}></i>
                             ) : (
                                 <i className="bi bi-arrow-up" onClick={(e) => {
-                                    handleFirstNameSorting("desc", "area")
+                                    handleSorting("desc", "area")
                                     setSortingArea(!sortingArea);
                                 }}></i>
                             )}
@@ -434,12 +517,12 @@ const Table = () => {
                         <th>Salary
                             {sortingSalary ? (
                                 <i className="bi bi-arrow-down" onClick={(e) => {
-                                    handleFirstNameSorting("asc", "salary")
+                                    handleSorting("asc", "salary")
                                     setSortingSalary(!sortingSalary);
                                 }}></i>
                             ) : (
                                 <i className="bi bi-arrow-up" onClick={(e) => {
-                                    handleFirstNameSorting("desc", "salary")
+                                    handleSorting("desc", "salary")
                                     setSortingSalary(!sortingSalary);
                                 }}></i>
                             )}
@@ -479,6 +562,7 @@ const Table = () => {
                 </tbody>
             </table>
 
+            {/* PAgination */}
             <nav>
                 <ul className="pagination">
                     <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
